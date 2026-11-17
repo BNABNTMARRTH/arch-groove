@@ -1,0 +1,13 @@
+[Unit]
+Description=Asahi Apple Silicon Fan Control Daemon (Rust)
+After=syslog.target network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/asahi-fan-control
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+

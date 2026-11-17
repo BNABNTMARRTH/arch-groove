@@ -1,0 +1,12 @@
+[Unit]
+Description=Asahi Apple Silicon Battery Charge Limiter (Rust)
+After=syslog.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/asahi-battery-limiter 80
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+

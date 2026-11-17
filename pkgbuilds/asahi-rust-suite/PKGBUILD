@@ -1,0 +1,57 @@
+# Maintainer: Arch Linux Mac Rust Team
+pkgbase=asahi-rust-suite
+pkgname=('asahi-fan-control' 'asahi-power-profile' 'asahi-battery-limiter')
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="High-performance Rust daemons and utilities for Apple Silicon (M1/M2/M3/M4) on Arch Linux ARM"
+arch=('aarch64')
+url="https://github.com/google/elephant-goldfish-model"
+license=('MIT' 'Apache-2.0')
+makedepends=('cargo' 'rust')
+source=("$pkgbase-$pkgver.tar.gz::https://github.com/example/$pkgbase/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+prepare() {
+    cd "$pkgbase-$pkgver"
+    cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+    cd "$pkgbase-$pkgver"
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo build --frozen --release --all-targets
+}
+
+check() {
+    cd "$pkgbase-$pkgver"
+    cargo test --frozen
+}
+
+package_asahi-fan-control() {
+    pkgdesc="Zero-overhead fan control daemon for Apple Silicon Mac in Rust"
+    depends=('glibc')
+    
+    cd "$pkgbase-$pkgver"
+    install -Dm755 "target/release/asahi-fan-control" "$pkgdir/usr/bin/asahi-fan-control"
+    install -Dm644 "systemd/asahi-fan-control.service" "$pkgdir/usr/lib/systemd/system/asahi-fan-control.service"
+}
+
+package_asahi-power-profile() {
+    pkgdesc="P-Core and E-Core governor and power profile manager in Rust"
+    depends=('glibc')
+
+    cd "$pkgbase-$pkgver"
+    install -Dm755 "target/release/asahi-power-profile" "$pkgdir/usr/bin/asahi-power-profile"
+    install -Dm644 "systemd/asahi-power-profile.service" "$pkgdir/usr/lib/systemd/system/asahi-power-profile.service"
+}
+
+package_asahi-battery-limiter() {
+    pkgdesc="Battery charge threshold manager (80% lifespan preservation) in Rust"
+    depends=('glibc')
+
+    cd "$pkgbase-$pkgver"
+    install -Dm755 "target/release/asahi-battery-limiter" "$pkgdir/usr/bin/asahi-battery-limiter"
+    install -Dm644 "systemd/asahi-battery-limiter.service" "$pkgdir/usr/lib/systemd/system/asahi-battery-limiter.service"
+}
+

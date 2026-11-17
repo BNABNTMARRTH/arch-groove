@@ -1,0 +1,12 @@
+[Unit]
+Description=Asahi Apple Silicon Power Profile Governor (Rust)
+After=syslog.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/asahi-power-profile balanced
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+

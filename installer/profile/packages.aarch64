@@ -1,0 +1,58 @@
+# Arch Linux ARM + Asahi Linux Profile Packages
+# Core system
+base
+base-devel
+linux-asahi
+linux-asahi-headers
+asahi-fwextract
+m1n1
+u-boot-asahi
+mkinitcpio
+
+# System & Networking
+systemd
+networkmanager
+iwd
+openssh
+sudo
+git
+curl
+wget
+zsh
+htop
+
+# Audio (Apple Silicon DSP Profiles)
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+asahi-audio
+
+# Graphics & Mesa Drivers (Vulkan 1.3 & OpenGL 4.6)
+mesa
+vulkan-panfrost
+vulkan-icd-loader
+wayland
+xorg-xwayland
+
+# Desktop: KDE Plasma 6
+plasma-meta
+plasma-wayland-session
+kde-applications-meta
+sddm
+sddm-kcm
+kinfocenter
+konsole
+dolphin
+ark
+
+# Fonts & HiDPI Retina assets
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+ttf-dejavu
+
+# Rust Runtime
+rust
+cargo
+

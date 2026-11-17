@@ -1,0 +1,11 @@
+[1]
+Description=System Settings Translucency
+opacityactive=88
+opacityactiverule=2
+opacityinactive=88
+opacityinactiverule=2
+wmclass=systemsettings
+wmclassmatch=1
+
+[General]
+Order=1

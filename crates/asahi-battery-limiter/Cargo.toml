@@ -1,0 +1,11 @@
+[package]
+name = "asahi-battery-limiter"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = "1.0"
+log = "0.4"
+env_logger = "0.11"
+
