@@ -19,3 +19,4 @@ BorderSize=Tiny
 BorderSizeAuto=false
 ButtonsOnLeft=XIA
 ButtonsOnRight=
+library=org.kde.kwin.aurorae.v2
