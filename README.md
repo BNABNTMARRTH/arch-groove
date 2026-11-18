@@ -4,7 +4,7 @@
 
 ---
 
-## 🎯 Objetivos Principales
+## - Objetivos Principales
 
 ### 1. Virtualización Portátil vía Thunderbolt y Wi-Fi
 - **Thunderbolt / USB-C Directo**: Ejecuta tu VM o ISO directamente desde un SSD externo a máxima velocidad, con todas las configuraciones persistidas en `/etc/skel/.config/`.
