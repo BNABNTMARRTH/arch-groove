@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+import glob
+import json
+import os
+import subprocess
+import sys
+import uuid
+
+def get_wayland_env():
+    env = os.environ.copy()
+    env.setdefault("XDG_RUNTIME_DIR", "/run/user/1000")
+    env.setdefault("DBUS_SESSION_BUS_ADDRESS", "unix:path=/run/user/1000/bus")
+    env.setdefault("QT_QPA_PLATFORM", "wayland")
+    socks = sorted(glob.glob("/run/user/1000/wayland-*"))
+    socks = [s for s in socks if not s.endswith(".lock")]
+    if socks:
+        env["WAYLAND_DISPLAY"] = os.path.basename(socks[0])
+    else:
+        env.setdefault("WAYLAND_DISPLAY", "wayland-1")
+    return env
+
+def run_cmd(cmd, as_alarm=False, wayland=False, timeout=30):
+    env = get_wayland_env() if wayland else os.environ.copy()
+    if as_alarm and os.geteuid() == 0:
+        env_prefix = (
+            f"DBUS_SESSION_BUS_ADDRESS={env.get('DBUS_SESSION_BUS_ADDRESS')} "
+            f"WAYLAND_DISPLAY={env.get('WAYLAND_DISPLAY')} "
+            f"XDG_RUNTIME_DIR={env.get('XDG_RUNTIME_DIR')} "
+            f"QT_QPA_PLATFORM=wayland"
+        )
+        full_cmd = ["su", "-", "alarm", "-c", f"{env_prefix} {cmd}"]
+        return subprocess.run(full_cmd, capture_output=True, text=True, timeout=timeout)
+    return subprocess.run(cmd, shell=isinstance(cmd, str), env=env, capture_output=True, text=True, timeout=timeout)
+
+TOOLS = [
+    {
+        "name": "screen_capture",
+        "description": "Capture the active KDE Plasma Wayland screen using spectacle and return the saved PNG path.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"output_path": {"type": "string", "default": "/tmp/groovecore_screen.png"}},
+        },
+    },
+    {
+        "name": "mouse_move",
+        "description": "Move the mouse cursor to absolute or relative coordinates using ydotool.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "x": {"type": "integer"},
+                "y": {"type": "integer"},
+                "absolute": {"type": "boolean", "default": True},
+            },
+            "required": ["x", "y"],
+        },
+    },
+    {
+        "name": "mouse_click",
+        "description": "Click mouse button (left, right, middle) using ydotool.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"button": {"type": "string", "enum": ["left", "right", "middle"], "default": "left"}},
+        },
+    },
+    {
+        "name": "keyboard_type",
+        "description": "Type text into the focused Wayland window using ydotool.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"text": {"type": "string"}},
+            "required": ["text"],
+        },
+    },
+    {
+        "name": "clipboard_get",
+        "description": "Read current Wayland clipboard text via wl-paste.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "clipboard_set",
+        "description": "Write text to the Wayland clipboard via wl-copy.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"text": {"type": "string"}},
+            "required": ["text"],
+        },
+    },
+    {
+        "name": "tmux_run",
+        "description": "Run a shell command inside a persistent tmux session.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session": {"type": "string", "default": "groovecore"},
+                "command": {"type": "string"},
+            },
+            "required": ["command"],
+        },
+    },
+    {
+        "name": "tmux_read",
+        "description": "Read recent output lines from a persistent tmux session.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session": {"type": "string", "default": "groovecore"},
+                "lines": {"type": "integer", "default": 50},
+            },
+        },
+    },
+    {
+        "name": "delegate_agent",
+        "description": "Delegate a subtask to an autonomous OpenCode sub-agent running in an isolated tmux session.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "task": {"type": "string"},
+                "session": {"type": "string"},
+            },
+            "required": ["task"],
+        },
+    },
+    {
+        "name": "system_snapshot",
+        "description": "Return a quick snapshot of Arch Groove OS state (disk, memory, Wayland socket, active services).",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+]
+
+def handle_tool(name, args):
+    if name == "screen_capture":
+        out = args.get("output_path", "/tmp/groovecore_screen.png")
+        r = run_cmd(f"spectacle -b -n -o {out}", as_alarm=True, wayland=True)
+        return f"Captured to {out}" if r.returncode == 0 else f"Error: {r.stderr}"
+    if name == "mouse_move":
+        x, y = int(args["x"]), int(args["y"])
+        flag = "-a" if args.get("absolute", True) else ""
+        r = run_cmd(f"ydotool mousemove {flag} -x {x} -y {y}", as_alarm=True)
+        return "OK" if r.returncode == 0 else f"Error: {r.stderr}"
+    if name == "mouse_click":
+        btn_map = {"left": "0xC0", "right": "0xC1", "middle": "0xC2"}
+        code = btn_map.get(args.get("button", "left"), "0xC0")
+        r = run_cmd(f"ydotool click {code}", as_alarm=True)
+        return "OK" if r.returncode == 0 else f"Error: {r.stderr}"
+    if name == "keyboard_type":
+        txt = args["text"].replace("'", "'\"'\"'")
+        r = run_cmd(f"ydotool type '{txt}'", as_alarm=True)
+        return "OK" if r.returncode == 0 else f"Error: {r.stderr}"
+    if name == "clipboard_get":
+        r = run_cmd("wl-paste -n", as_alarm=True, wayland=True)
+        return r.stdout if r.returncode == 0 else f"Error: {r.stderr}"
+    if name == "clipboard_set":
+        txt = args["text"].replace("'", "'\"'\"'")
+        r = run_cmd(f"printf '%s' '{txt}' | wl-copy", as_alarm=True, wayland=True)
+        return "OK" if r.returncode == 0 else f"Error: {r.stderr}"
+    if name == "tmux_run":
+        sess = args.get("session", "groovecore")
+        cmd = args["command"].replace("'", "'\"'\"'")
+        run_cmd(f"tmux has-session -t {sess} 2>/dev/null || tmux new-session -d -s {sess}", as_alarm=True)
+        r = run_cmd(f"tmux send-keys -t {sess} '{cmd}' C-m", as_alarm=True)
+        return f"Sent to tmux:{sess}" if r.returncode == 0 else f"Error: {r.stderr}"
+    if name == "tmux_read":
+        sess = args.get("session", "groovecore")
+        lines = int(args.get("lines", 50))
+        r = run_cmd(f"tmux capture-pane -t {sess} -p -S -{lines}", as_alarm=True)
+        return r.stdout if r.returncode == 0 else f"Error: {r.stderr}"
+    if name == "delegate_agent":
+        sess = args.get("session") or f"agent-{uuid.uuid4().hex[:6]}"
+        task = args["task"].replace("'", "'\"'\"'")
+        run_cmd(f"tmux new-session -d -s {sess}", as_alarm=True)
+        r = run_cmd(f"tmux send-keys -t {sess} 'opencode run \"{task}\"' C-m", as_alarm=True)
+        return f"Delegated to tmux session '{sess}'. Use tmux_read(session='{sess}') to inspect progress."
+    if name == "system_snapshot":
+        r = run_cmd("uname -a && df -h / && free -h && ls /run/user/1000/wayland-* 2>/dev/null")
+        return r.stdout
+    return f"Unknown tool: {name}"
+
+def main():
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        req = json.loads(line)
+        rid = req.get("id")
+        method = req.get("method")
+        if method == "initialize":
+            resp = {
+                "jsonrpc": "2.0",
+                "id": rid,
+                "result": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {"tools": {}},
+                    "serverInfo": {"name": "groovecore-mcp", "version": "1.0.0"},
+                },
+            }
+        elif method == "tools/list":
+            resp = {"jsonrpc": "2.0", "id": rid, "result": {"tools": TOOLS}}
+        elif method == "tools/call":
+            params = req.get("params", {})
+            out = handle_tool(params.get("name"), params.get("arguments", {}))
+            resp = {"jsonrpc": "2.0", "id": rid, "result": {"content": [{"type": "text", "text": str(out)}]}}
+        elif rid is not None:
+            resp = {"jsonrpc": "2.0", "id": rid, "result": {}}
+        else:
+            continue
+        sys.stdout.write(json.dumps(resp) + "\n")
+        sys.stdout.flush()
+
+if __name__ == "__main__":
+    main()
