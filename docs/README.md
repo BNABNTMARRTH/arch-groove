@@ -1,6 +1,6 @@
 # Arch Linux ARM en Apple Silicon & UTM (EGM-Compliant)
 
-Documentación técnica integral, arquitectura del sistema y guías operativas para la distribución Arch Linux ARM optimizada para hardware Apple Silicon (M1/M2/M3/M4) y virtualización acelerada por hipervisor en UTM.
+Documentación, arquitectura del sistema y guías operativas para la distribución Arch Linux ARM optimizada para hardware Apple Silicon (M1/M2/M3/M4) y virtualización acelerada por hipervisor en UTM.
 
 ---
 
