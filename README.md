@@ -41,3 +41,32 @@
 - [Guía Maestra Apple Silicon & UTM](docs/README.md)
 - [Montaje Remoto de ISO por Wi-Fi (SMB / Tailscale / WireGuard)](docs/remote_iso_mount_wifi.md)
 - [Plan de Compilación de Blender en `aarch64`](docs/blender_aarch64_install_plan.md)
+
+---
+
+## 🚀 Inicio Rápido
+
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/BNABNTMARRTH/arch-groove.git
+   cd arch-groove
+   ```
+2. **Desplegar base en UTM / Apple Silicon:** seguir [`docs/README.md`](docs/README.md) e instalar [`installer/profile/packages.aarch64`](installer/profile/packages.aarch64).
+3. **Aplicar entorno macOS (Dock, KWin, Dolphin, idioma):**
+   ```bash
+   cp -a configs/skel/* ~/.config/
+   sudo cp -a configs/skel/* /etc/skel/.config/
+   sudo cp configs/wavetask/{main.qml,Task.qml} /usr/share/plasma/plasmoids/org.vicko.wavetask/contents/ui/
+   systemctl --user restart plasma-plasmashell.service
+   ```
+4. **Activar GrooveCore (Harness + Extensión):**
+   ```bash
+   sudo pacman -S --noconfirm --needed spectacle ydotool wl-clipboard tmux spice-vdagent cifs-utils tailscale
+   sudo cp harness/groovecore-mcp /usr/local/bin/groovecore-mcp && sudo chmod +x /usr/local/bin/groovecore-mcp
+   sudo mkdir -p /etc/groovecore && sudo cp harness/GROOVECORE.md /etc/groovecore/GROOVECORE.md
+   ```
+   Desde el Mac host:
+   ```bash
+   GROOVECORE_VM_IP=<IP_DE_TU_VM> ./harness/groovecore-bridge.sh
+   ```
+
