@@ -45,3 +45,4 @@ sudo mount -o loop /mnt/router/<RUTA_ISO>.iso /mnt/iso
 ```text
 //<ROUTER_IP>/<SHARE> /mnt/router cifs username=<USER>,password=<PASS>,uid=1000,gid=1000,_netdev,x-systemd.automount 0 0
 ```
+

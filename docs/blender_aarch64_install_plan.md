@@ -71,3 +71,4 @@ Utiliza el Python del sistema si la rama `main` ya soporta Python 3.14:
      -DWITH_CODEC_FFMPEG=OFF
    cmake --build /opt/blender-build --target install -j$(nproc)
    ```
+

@@ -52,3 +52,4 @@ sudo mount -o loop /mnt/router/ruta/arch-groove.iso /mnt/iso
    sudo systemctl enable --now wg-quick@wg0
    ```
 3. Monta `//192.168.1.1/Backup` normalmente.
+

@@ -50,3 +50,4 @@ Siempre sincronizar `/home/alarm/.config/` hacia `/etc/skel/.config/` y ejecutar
 cp -a /home/alarm/.config/{kwinrc,kwinrulesrc,dolphinrc,klaunchrc,kscreenlockerrc,powerdevilrc,kwalletrc,plasmashellrc,plasma-org.kde.plasma.desktop-appletsrc} /etc/skel/.config/
 sync
 ```
+
